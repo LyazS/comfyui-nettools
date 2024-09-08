@@ -4,63 +4,42 @@ import numpy as np
 import base64
 import torch
 from io import BytesIO
-from server import PromptServer, BinaryEventTypes
+from server import PromptServer
+import json
 
 
-class LoadImageBase64:
+class LoadImagesBase64:
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": {
-                "image": ("STRING", {"multiline": False}),
+                "images": ("STRING", {"multiline": False}),
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "MASK")
+    RETURN_TYPES = ("IMAGE",)
     CATEGORY = "external_tooling"
-    FUNCTION = "load_image"
+    FUNCTION = "load_images"
 
-    def load_image(self, image):
-        imgdata = base64.b64decode(image)
-        img = Image.open(BytesIO(imgdata))
+    def load_images(self, images):
+        imgs = []
+        base64_strings = json.loads(images)
+        for base64_str in base64_strings:
+            imgdata = base64.b64decode(base64_str)
+            img = Image.open(BytesIO(imgdata))
 
-        if "A" in img.getbands():
-            mask = np.array(img.getchannel("A")).astype(np.float32) / 255.0
-            mask = 1.0 - torch.from_numpy(mask)
-        else:
-            mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+            img = img.convert("RGB")
+            img = np.array(img).astype(np.float32) / 255.0
+            img = torch.from_numpy(img)[None,]
 
-        img = img.convert("RGB")
-        img = np.array(img).astype(np.float32) / 255.0
-        img = torch.from_numpy(img)[None,]
+            imgs.append(img)
+        pass
+        stacked_imgs = torch.cat(imgs, dim=0)
 
-        return (img, mask)
-
-
-class LoadMaskBase64:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "mask": ("STRING", {"multiline": False}),
-            }
-        }
-
-    RETURN_TYPES = ("MASK",)
-    CATEGORY = "external_tooling"
-    FUNCTION = "load_mask"
-
-    def load_mask(self, mask):
-        imgdata = base64.b64decode(mask)
-        img = Image.open(BytesIO(imgdata))
-        img = np.array(img).astype(np.float32) / 255.0
-        img = torch.from_numpy(img)
-        if img.dim() == 3:  # RGB(A) input, use red channel
-            img = img[:, :, 0]
-        return (img.unsqueeze(0),)
+        return (stacked_imgs,)
 
 
-class SendImageWebSocket:
+class SendImagesWebSocket:
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -108,12 +87,10 @@ class SendImageWebSocket:
 
 
 NODE_CLASS_MAPPINGS = {
-    "NTL_LoadImageBase64": LoadImageBase64,
-    "NTL_LoadMaskBase64": LoadMaskBase64,
-    "NTL_SendImageWebSocket": SendImageWebSocket,
+    "NTL_LoadImagesBase64": LoadImagesBase64,
+    "NTL_SendImagesWebSocket": SendImagesWebSocket,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "NTL_LoadImageBase64": "ntl Load Image (Base64)",
-    "NTL_LoadMaskBase64": "ntl Load Mask (Base64)",
-    "NTL_SendImageWebSocket": "ntl Send Image (WebSocket)",
+    "NTL_LoadImagesBase64": "ntl Load Images (Base64)",
+    "NTL_SendImagesWebSocket": "ntl Send Images (WebSocket)",
 }
