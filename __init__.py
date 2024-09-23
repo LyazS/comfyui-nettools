@@ -6,7 +6,7 @@ import torch
 from io import BytesIO
 from server import PromptServer
 import json
-
+import random
 
 class LoadImagesBase64:
     @classmethod
@@ -85,6 +85,9 @@ class SendImagesWebSocket:
 
         return {"ui": {"images": results}}
 
+    @classmethod
+    def IS_CHANGED(s, images, nodelabel, partlen):
+        return random.randint()
 
 NODE_CLASS_MAPPINGS = {
     "NTL_LoadImagesBase64": LoadImagesBase64,
