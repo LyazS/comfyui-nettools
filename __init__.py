@@ -7,6 +7,7 @@ from io import BytesIO
 from server import PromptServer
 import json
 import random
+import sys
 
 class LoadImagesBase64:
     @classmethod
@@ -87,7 +88,7 @@ class SendImagesWebSocket:
 
     @classmethod
     def IS_CHANGED(s, images, nodelabel, partlen):
-        return random.randint()
+        return random.randint(0, sys.maxsize)
 
 NODE_CLASS_MAPPINGS = {
     "NTL_LoadImagesBase64": LoadImagesBase64,
