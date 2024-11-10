@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-nettools"
+description = "A net tool node for comfyui, rewrite from [comfyui-tooling-nodes](https://github.com/Acly/comfyui-tooling-nodes) but support more big data sending."
+version = "1.0.0"
+license = {file = "LICENSE"}
+
+[project.urls]
+Repository = "https://github.com/LyazS/comfyui-nettools"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "comfyui-nettools"
+Icon = ""
